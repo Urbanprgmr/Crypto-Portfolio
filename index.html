@@ -409,6 +409,7 @@
 
     // Function to update charts
     function updateCharts() {
+      console.log("Updating charts...");
       const portfolioPieChartCtx = document.getElementById('portfolioPieChart').getContext('2d');
       const portfolioLineChartCtx = document.getElementById('portfolioLineChart').getContext('2d');
 
@@ -427,6 +428,9 @@
         const currentPrice = prices[coinGeckoId]?.usd || 0;
         return crypto.quantity * currentPrice;
       });
+
+      console.log("Chart Data - Labels:", labels);
+      console.log("Chart Data - USD Values:", usdValues);
 
       // Pie Chart for Portfolio Distribution
       portfolioPieChart = new Chart(portfolioPieChartCtx, {
@@ -484,6 +488,9 @@
     // Update portfolio table and charts
     async function updatePortfolio() {
       const prices = await fetchPrices();
+      console.log("Prices:", prices); // Debugging
+      console.log("Portfolio:", portfolio); // Debugging
+
       const portfolioTableBody = document.querySelector('#portfolioTable tbody');
       const usdValueTableBody = document.querySelector('#usdValueTable tbody');
       const profitLossTableBody = document.querySelector('#profitLossTable tbody');
