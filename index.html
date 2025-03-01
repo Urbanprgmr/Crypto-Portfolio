@@ -153,24 +153,6 @@
       </table>
     </div>
 
-    <div class="targets-section">
-      <h2>Price Targets & Profits</h2>
-      <table id="targetsTable">
-        <thead>
-          <tr>
-            <th>Crypto</th>
-            <th>2x Target</th>
-            <th>Profit @ 2x</th>
-            <th>5x Target</th>
-            <th>Profit @ 5x</th>
-            <th>10x Target</th>
-            <th>Profit @ 10x</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
-    </div>
-
     <div class="totals">
       <h3>Total Investment</h3>
       <p id="totalInvestment">$0.00</p>
@@ -248,14 +230,11 @@
 
     async function updatePortfolio() {
       const prices = await fetchPrices();
-      const portfolioTableBody = document.querySelector("#portfolioTable tbody");
-      portfolioTableBody.innerHTML = "";
-
+      document.querySelector("#portfolioTable tbody").innerHTML = "";
       portfolio.forEach((crypto, index) => {
         const currentPrice = prices[cryptoIdMap[crypto.name]]?.usd || 0;
         const profitLossUSD = (currentPrice - crypto.avgPrice) * crypto.quantity;
-
-        portfolioTableBody.innerHTML += `
+        document.querySelector("#portfolioTable tbody").innerHTML += `
           <tr>
             <td>${crypto.name.toUpperCase()}</td>
             <td>${crypto.quantity}</td>
@@ -272,10 +251,7 @@
       });
     }
 
-    document.getElementById("addCryptoButton").addEventListener("click", addOrUpdateCrypto);
-    document.getElementById("updateCryptoButton").addEventListener("click", addOrUpdateCrypto);
     updatePortfolio();
   </script>
-
 </body>
 </html>
