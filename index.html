@@ -5,199 +5,25 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Crypto Portfolio Manager</title>
   <style>
-    body {
-      font-family: 'Arial', sans-serif;
-      margin: 0;
-      padding: 20px;
-      background: linear-gradient(135deg, #1e3c72, #2a5298);
-      color: #fff;
-    }
-    h1 {
-      text-align: center;
-      font-size: 2.5rem;
-      margin-bottom: 20px;
-      color: #ffd700;
-    }
-    h2 {
-      font-size: 1.8rem;
-      margin-top: 30px;
-      color: #ffd700;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 20px;
-      background: rgba(255, 255, 255, 0.1);
-      border-radius: 10px;
-      overflow: hidden;
-    }
-    th, td {
-      padding: 12px;
-      text-align: center;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    }
-    th {
-      background: rgba(255, 255, 255, 0.2);
-      font-weight: bold;
-    }
-    tr:hover {
-      background: rgba(255, 255, 255, 0.05);
-    }
-    input[type="text"], input[type="number"] {
-      padding: 10px;
-      width: 150px;
-      margin-right: 10px;
-      border: 1px solid rgba(255, 255, 255, 0.3);
-      border-radius: 5px;
-      background: rgba(255, 255, 255, 0.1);
-      color: #fff;
-    }
-    input[type="text"]::placeholder, input[type="number"]::placeholder {
-      color: rgba(255, 255, 255, 0.5);
-    }
-    button {
-      padding: 10px 20px;
-      background: #ffd700;
-      color: #1e3c72;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-      font-weight: bold;
-    }
-    button:hover {
-      background: #ffc107;
-    }
-    .container {
-      max-width: 1200px;
-      margin: 0 auto;
-    }
-    .form-group {
-      display: flex;
-      justify-content: center;
-      margin-bottom: 20px;
-    }
-    .profit-positive {
-      color: #4caf50;
-    }
-    .profit-negative {
-      color: #f44336;
-    }
-    .totals {
-      margin-top: 30px;
-      padding: 20px;
-      background: rgba(255, 255, 255, 0.1);
-      border-radius: 10px;
-    }
-    .totals h3 {
-      font-size: 1.5rem;
-      color: #ffd700;
-      margin-bottom: 10px;
-    }
-    .actions button {
-      margin: 0 5px;
-      padding: 5px 10px;
-      font-size: 0.9rem;
-    }
-    .target-input {
-      width: 80px;
-      margin: 0 5px;
-    }
+    /* (Keep the existing CSS styles unchanged) */
   </style>
 </head>
 <body>
   <div class="container">
     <h1>Crypto Portfolio Manager</h1>
     <div class="form-group">
-      <input type="text" id="cryptoName" placeholder="Crypto Name (e.g., gala)" required>
+      <!-- Replace text input with a dropdown -->
+      <select id="cryptoName" required>
+        <option value="" disabled selected>Select a Crypto</option>
+        <!-- Options will be dynamically populated -->
+      </select>
       <input type="number" step="0.000001" id="avgPrice" placeholder="Average Price" required>
       <input type="number" step="0.000001" id="quantity" placeholder="Quantity" required>
       <button type="submit" id="addCryptoButton">Add Crypto</button>
       <button type="button" id="updateCryptoButton" style="display: none;">Update Crypto</button>
     </div>
 
-    <h2>Portfolio</h2>
-    <table id="portfolioTable">
-      <thead>
-        <tr>
-          <th>Crypto</th>
-          <th>Quantity</th>
-          <th>Avg Price</th>
-          <th>Current Price</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        <!-- Rows will be added here dynamically -->
-      </tbody>
-    </table>
-
-    <h2>USD Value of Each Token</h2>
-    <table id="usdValueTable">
-      <thead>
-        <tr>
-          <th>Crypto</th>
-          <th>USD Value</th>
-        </tr>
-      </thead>
-      <tbody>
-        <!-- Rows will be added here dynamically -->
-      </tbody>
-    </table>
-
-    <h2>Profit/Loss</h2>
-    <table id="profitLossTable">
-      <thead>
-        <tr>
-          <th>Crypto</th>
-          <th>Profit/Loss USD</th>
-          <th>Profit/Loss %</th>
-        </tr>
-      </thead>
-      <tbody>
-        <!-- Rows will be added here dynamically -->
-      </tbody>
-    </table>
-
-    <h2>Profit at Targets</h2>
-    <div class="form-group">
-      <label for="target1">Target 1:</label>
-      <input type="number" id="target1" class="target-input" min="1" max="1000" value="2">
-      <label for="target2">Target 2:</label>
-      <input type="number" id="target2" class="target-input" min="1" max="1000" value="5">
-      <label for="target3">Target 3:</label>
-      <input type="number" id="target3" class="target-input" min="1" max="1000" value="10">
-      <button onclick="updateTargets()">Update Targets</button>
-    </div>
-    <table id="profitTargetsTable">
-      <thead>
-        <tr>
-          <th>Crypto</th>
-          <th>Target 1 Profit USD</th>
-          <th>Target 1 Profit %</th>
-          <th>Target 2 Profit USD</th>
-          <th>Target 2 Profit %</th>
-          <th>Target 3 Profit USD</th>
-          <th>Target 3 Profit %</th>
-        </tr>
-      </thead>
-      <tbody>
-        <!-- Rows will be added here dynamically -->
-      </tbody>
-    </table>
-
-    <div class="totals">
-      <h3>Total USD Value of All Tokens</h3>
-      <p id="totalUsdValue">$0.00</p>
-
-      <h3>Total Profit/Loss</h3>
-      <p id="totalProfitLossUsd">$0.00</p>
-      <p id="totalProfitLossPercentage">0.00%</p>
-
-      <h3>Total Profit at Targets</h3>
-      <p id="totalProfitTarget1">Target 1: $0.00</p>
-      <p id="totalProfitTarget2">Target 2: $0.00</p>
-      <p id="totalProfitTarget3">Target 3: $0.00</p>
-    </div>
+    <!-- (Keep the rest of the HTML unchanged) -->
   </div>
 
   <script>
@@ -205,8 +31,8 @@
     const cryptoIdMap = {
       gala: 'gala',
       cookie: 'cookie',
-      dogs: 'dogs-2', // Correct ID for Dogs
-      alpaca: 'alpaca-finance', // Correct ID for Alpaca
+      dogs: 'dogs-2',
+      alpaca: 'alpaca-finance',
       render: 'render-token',
       ctxc: 'cortex',
       ton: 'the-open-network',
@@ -215,16 +41,31 @@
       dot: 'polkadot',
       xrp: 'ripple',
       neiro: 'neiro',
-      trump: 'official-trump', // Correct ID for Trump
+      trump: 'official-trump',
       troy: 'troy',
       sxp: 'sxp',
       beam: 'beam-2',
-      babydoge: '1mbabydoge', // Updated ID for Baby Doge
+      babydoge: '1mbabydoge',
       pi: 'pi-network',
-      portal: 'portal-2' // Correct ID for Portal
+      portal: 'portal-2'
     };
 
     const cryptos = Object.keys(cryptoIdMap);
+
+    // Function to populate the dropdown
+    function populateCryptoDropdown() {
+      const cryptoDropdown = document.getElementById('cryptoName');
+      cryptoDropdown.innerHTML = '<option value="" disabled selected>Select a Crypto</option>'; // Reset dropdown
+      cryptos.forEach(crypto => {
+        const option = document.createElement('option');
+        option.value = crypto;
+        option.textContent = crypto.toUpperCase();
+        cryptoDropdown.appendChild(option);
+      });
+    }
+
+    // Call the function to populate the dropdown on page load
+    populateCryptoDropdown();
 
     let portfolio = [];
     let editIndex = null;
@@ -259,7 +100,7 @@
       const quantity = parseFloat(document.getElementById('quantity').value);
 
       if (!cryptos.includes(cryptoName)) {
-        alert('Crypto not supported. Please enter a valid crypto name.');
+        alert('Crypto not supported. Please select a valid crypto from the list.');
         return;
       }
 
@@ -279,7 +120,7 @@
       const quantity = parseFloat(document.getElementById('quantity').value);
 
       if (!cryptos.includes(cryptoName)) {
-        alert('Crypto not supported. Please enter a valid crypto name.');
+        alert('Crypto not supported. Please select a valid crypto from the list.');
         return;
       }
 
