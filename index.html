@@ -132,6 +132,7 @@
       <input type="number" step="0.000001" id="avgPrice" placeholder="Average Price" required>
       <input type="number" step="0.000001" id="quantity" placeholder="Quantity" required>
       <button id="addCryptoButton">Add Crypto</button>
+      <button id="updateCryptoButton" style="display: none;">Update Crypto</button>
     </div>
 
     <div class="portfolio-section">
@@ -182,6 +183,7 @@
 
   <script>
     let portfolio = JSON.parse(localStorage.getItem("cryptoPortfolio")) || [];
+    let editIndex = null;
 
     const cryptoIdMap = {
       gala: "gala",
@@ -193,7 +195,7 @@
       dogs: "dogs-2",
       cookie: "cookie",
       render: "render-token",
-      Pi: "pi-network"
+      pi: "pi-network"
     };
 
     async function fetchPrices() {
@@ -202,26 +204,52 @@
       return response.json();
     }
 
+    function savePortfolio() {
+      localStorage.setItem("cryptoPortfolio", JSON.stringify(portfolio));
+    }
+
+    function addCrypto() {
+      const name = document.getElementById("cryptoName").value.toLowerCase();
+      const avgPrice = parseFloat(document.getElementById("avgPrice").value);
+      const quantity = parseFloat(document.getElementById("quantity").value);
+
+      if (!cryptoIdMap[name]) {
+        alert("Crypto not found!");
+        return;
+      }
+
+      if (editIndex === null) {
+        portfolio.push({ name, avgPrice, quantity });
+      } else {
+        portfolio[editIndex] = { name, avgPrice, quantity };
+        editIndex = null;
+        document.getElementById("addCryptoButton").style.display = "inline-block";
+        document.getElementById("updateCryptoButton").style.display = "none";
+      }
+
+      savePortfolio();
+      updatePortfolio();
+    }
+
+    function editCrypto(index) {
+      document.getElementById("cryptoName").value = portfolio[index].name;
+      document.getElementById("avgPrice").value = portfolio[index].avgPrice;
+      document.getElementById("quantity").value = portfolio[index].quantity;
+
+      editIndex = index;
+      document.getElementById("addCryptoButton").style.display = "none";
+      document.getElementById("updateCryptoButton").style.display = "inline-block";
+    }
+
     async function updatePortfolio() {
       const prices = await fetchPrices();
       const portfolioTableBody = document.querySelector("#portfolioTable tbody");
-      const targetsTableBody = document.querySelector("#targetsTable tbody");
       portfolioTableBody.innerHTML = "";
-      targetsTableBody.innerHTML = "";
-
-      let totalInvestment = 0;
-      let totalPortfolioValue = 0;
-      let totalProfitLoss = 0;
 
       portfolio.forEach((crypto, index) => {
         const currentPrice = prices[cryptoIdMap[crypto.name]]?.usd || 0;
         const totalCost = crypto.quantity * crypto.avgPrice;
-        const totalValue = crypto.quantity * currentPrice;
-        const profitLossUSD = totalValue - totalCost;
-
-        totalInvestment += totalCost;
-        totalPortfolioValue += totalValue;
-        totalProfitLoss += profitLossUSD;
+        const profitLossUSD = (currentPrice - crypto.avgPrice) * crypto.quantity;
 
         portfolioTableBody.innerHTML += `
           <tr>
@@ -231,27 +259,17 @@
             <td>$${totalCost.toFixed(2)}</td>
             <td>$${currentPrice.toFixed(6)}</td>
             <td class="${profitLossUSD >= 0 ? 'profit-positive' : 'profit-negative'}">$${profitLossUSD.toFixed(2)}</td>
-            <td><button onclick="deleteCrypto(${index})">Delete</button></td>
-          </tr>
-        `;
-
-        targetsTableBody.innerHTML += `
-          <tr>
-            <td>${crypto.name.toUpperCase()}</td>
-            <td>$${(crypto.avgPrice * 2).toFixed(6)}</td>
-            <td class="profit-positive">$${(crypto.quantity * (crypto.avgPrice * 2) - totalCost).toFixed(2)}</td>
-            <td>$${(crypto.avgPrice * 5).toFixed(6)}</td>
-            <td class="profit-positive">$${(crypto.quantity * (crypto.avgPrice * 5) - totalCost).toFixed(2)}</td>
-            <td>$${(crypto.avgPrice * 10).toFixed(6)}</td>
-            <td class="profit-positive">$${(crypto.quantity * (crypto.avgPrice * 10) - totalCost).toFixed(2)}</td>
+            <td>
+              <button onclick="editCrypto(${index})">Edit</button>
+              <button onclick="deleteCrypto(${index})">Delete</button>
+            </td>
           </tr>
         `;
       });
-
-      document.getElementById("totalInvestment").textContent = `$${totalInvestment.toFixed(2)}`;
-      document.getElementById("totalUsdValue").textContent = `$${totalPortfolioValue.toFixed(2)}`;
-      document.getElementById("totalProfitLossUsd").textContent = `$${totalProfitLoss.toFixed(2)}`;
     }
+
+    document.getElementById("addCryptoButton").addEventListener("click", addCrypto);
+    document.getElementById("updateCryptoButton").addEventListener("click", addCrypto);
 
     updatePortfolio();
     setInterval(updatePortfolio, 60000);
