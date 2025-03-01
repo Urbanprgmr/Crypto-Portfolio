@@ -129,7 +129,6 @@
       <input type="number" step="0.000001" id="avgPrice" placeholder="Average Price" required>
       <input type="number" step="0.000001" id="quantity" placeholder="Quantity" required>
       <button id="addCryptoButton">Add Crypto</button>
-      <button id="updateCryptoButton" style="display: none;">Update Crypto</button>
     </div>
 
     <h2>Portfolio</h2>
@@ -141,8 +140,11 @@
           <th>Avg Price</th>
           <th>Current Price</th>
           <th>2x Target</th>
+          <th>Profit @ 2x</th>
           <th>5x Target</th>
+          <th>Profit @ 5x</th>
           <th>10x Target</th>
+          <th>Profit @ 10x</th>
           <th>Actions</th>
         </tr>
       </thead>
@@ -152,9 +154,10 @@
     <div class="totals">
       <h3>Total USD Value</h3>
       <p id="totalUsdValue">$0.00</p>
-      <h3>Total Profit/Loss</h3>
-      <p id="totalProfitLossUsd">$0.00</p>
-      <p id="totalProfitLossPercentage">0.00%</p>
+      <h3>Total Profit at Targets</h3>
+      <p>2x Target: <span id="totalProfit2x">$0.00</span></p>
+      <p>5x Target: <span id="totalProfit5x">$0.00</span></p>
+      <p>10x Target: <span id="totalProfit10x">$0.00</span></p>
     </div>
   </div>
 
@@ -181,19 +184,23 @@
       portfolioTableBody.innerHTML = "";
 
       let totalUsdValue = 0;
-      let totalInvestment = 0;
-      let totalCurrentValue = 0;
+      let totalProfit2x = 0;
+      let totalProfit5x = 0;
+      let totalProfit10x = 0;
 
       portfolio.forEach((crypto, index) => {
         const coinGeckoId = cryptoIdMap[crypto.name];
         const currentPrice = prices[coinGeckoId]?.usd || 0;
         const totalValue = crypto.quantity * currentPrice;
         totalUsdValue += totalValue;
-        totalInvestment += crypto.quantity * crypto.avgPrice;
-        totalCurrentValue += totalValue;
 
-        const profitLossUSD = totalValue - (crypto.quantity * crypto.avgPrice);
-        const profitLossPercentage = ((totalValue - (crypto.quantity * crypto.avgPrice)) / (crypto.quantity * crypto.avgPrice)) * 100;
+        const profit2x = (crypto.quantity * (crypto.avgPrice * 2)) - (crypto.quantity * crypto.avgPrice);
+        const profit5x = (crypto.quantity * (crypto.avgPrice * 5)) - (crypto.quantity * crypto.avgPrice);
+        const profit10x = (crypto.quantity * (crypto.avgPrice * 10)) - (crypto.quantity * crypto.avgPrice);
+
+        totalProfit2x += profit2x;
+        totalProfit5x += profit5x;
+        totalProfit10x += profit10x;
 
         portfolioTableBody.innerHTML += `
           <tr>
@@ -202,8 +209,11 @@
             <td>$${crypto.avgPrice.toFixed(6)}</td>
             <td>$${currentPrice.toFixed(6)}</td>
             <td>$${(crypto.avgPrice * 2).toFixed(6)}</td>
+            <td class="profit-positive">$${profit2x.toFixed(2)}</td>
             <td>$${(crypto.avgPrice * 5).toFixed(6)}</td>
+            <td class="profit-positive">$${profit5x.toFixed(2)}</td>
             <td>$${(crypto.avgPrice * 10).toFixed(6)}</td>
+            <td class="profit-positive">$${profit10x.toFixed(2)}</td>
             <td class="actions">
               <button onclick="deleteCrypto(${index})">Delete</button>
             </td>
@@ -212,8 +222,9 @@
       });
 
       document.getElementById("totalUsdValue").textContent = `$${totalUsdValue.toFixed(2)}`;
-      document.getElementById("totalProfitLossUsd").textContent = `$${(totalCurrentValue - totalInvestment).toFixed(2)}`;
-      document.getElementById("totalProfitLossPercentage").textContent = `${(((totalCurrentValue - totalInvestment) / totalInvestment) * 100).toFixed(2)}%`;
+      document.getElementById("totalProfit2x").textContent = `$${totalProfit2x.toFixed(2)}`;
+      document.getElementById("totalProfit5x").textContent = `$${totalProfit5x.toFixed(2)}`;
+      document.getElementById("totalProfit10x").textContent = `$${totalProfit10x.toFixed(2)}`;
 
       localStorage.setItem("cryptoPortfolio", JSON.stringify(portfolio));
     }
@@ -222,11 +233,6 @@
       const name = document.getElementById("cryptoName").value.toLowerCase();
       const avgPrice = parseFloat(document.getElementById("avgPrice").value);
       const quantity = parseFloat(document.getElementById("quantity").value);
-
-      if (!cryptoIdMap[name]) {
-        alert("Unsupported crypto!");
-        return;
-      }
 
       portfolio.push({ name, avgPrice, quantity });
       updatePortfolio();
