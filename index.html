@@ -98,6 +98,10 @@
       padding: 5px 10px;
       font-size: 0.9rem;
     }
+    .target-input {
+      width: 80px;
+      margin: 0 5px;
+    }
   </style>
 </head>
 <body>
@@ -119,9 +123,6 @@
           <th>Quantity</th>
           <th>Avg Price</th>
           <th>Current Price</th>
-          <th>2x Target</th>
-          <th>5x Target</th>
-          <th>10x Target</th>
           <th>Actions</th>
         </tr>
       </thead>
@@ -158,16 +159,25 @@
     </table>
 
     <h2>Profit at Targets</h2>
+    <div class="form-group">
+      <label for="target1">Target 1:</label>
+      <input type="number" id="target1" class="target-input" min="1" max="1000" value="2">
+      <label for="target2">Target 2:</label>
+      <input type="number" id="target2" class="target-input" min="1" max="1000" value="5">
+      <label for="target3">Target 3:</label>
+      <input type="number" id="target3" class="target-input" min="1" max="1000" value="10">
+      <button onclick="updateTargets()">Update Targets</button>
+    </div>
     <table id="profitTargetsTable">
       <thead>
         <tr>
           <th>Crypto</th>
-          <th>2x Profit USD</th>
-          <th>2x Profit %</th>
-          <th>5x Profit USD</th>
-          <th>5x Profit %</th>
-          <th>10x Profit USD</th>
-          <th>10x Profit %</th>
+          <th>Target 1 Profit USD</th>
+          <th>Target 1 Profit %</th>
+          <th>Target 2 Profit USD</th>
+          <th>Target 2 Profit %</th>
+          <th>Target 3 Profit USD</th>
+          <th>Target 3 Profit %</th>
         </tr>
       </thead>
       <tbody>
@@ -184,9 +194,9 @@
       <p id="totalProfitLossPercentage">0.00%</p>
 
       <h3>Total Profit at Targets</h3>
-      <p id="totalProfit2x">2x: $0.00</p>
-      <p id="totalProfit5x">5x: $0.00</p>
-      <p id="totalProfit10x">10x: $0.00</p>
+      <p id="totalProfitTarget1">Target 1: $0.00</p>
+      <p id="totalProfitTarget2">Target 2: $0.00</p>
+      <p id="totalProfitTarget3">Target 3: $0.00</p>
     </div>
   </div>
 
@@ -218,6 +228,7 @@
 
     let portfolio = [];
     let editIndex = null;
+    let targetMultiples = [2, 5, 10]; // Default target multiples
 
     // Load portfolio from localStorage
     function loadPortfolio() {
@@ -301,6 +312,16 @@
       editIndex = index;
     }
 
+    // Update target multiples
+    function updateTargets() {
+      targetMultiples = [
+        parseInt(document.getElementById('target1').value),
+        parseInt(document.getElementById('target2').value),
+        parseInt(document.getElementById('target3').value)
+      ];
+      updatePortfolio();
+    }
+
     // Update portfolio table
     async function updatePortfolio() {
       const prices = await fetchPrices();
@@ -317,28 +338,21 @@
       let totalUsdValue = 0;
       let totalInvestment = 0;
       let totalCurrentValue = 0;
-      let totalProfit2x = 0;
-      let totalProfit5x = 0;
-      let totalProfit10x = 0;
+      let totalProfitTarget1 = 0;
+      let totalProfitTarget2 = 0;
+      let totalProfitTarget3 = 0;
 
       portfolio.forEach((crypto, index) => {
         const coinGeckoId = cryptoIdMap[crypto.name];
         const currentPrice = prices[coinGeckoId]?.usd || 0;
 
         // Portfolio Table
-        const target2x = crypto.avgPrice * 2;
-        const target5x = crypto.avgPrice * 5;
-        const target10x = crypto.avgPrice * 10;
-
         const portfolioRow = `
           <tr>
             <td>${crypto.name.toUpperCase()}</td>
             <td>${crypto.quantity}</td>
             <td>$${crypto.avgPrice.toFixed(6)}</td>
             <td>$${currentPrice}</td>
-            <td>$${target2x.toFixed(6)}</td>
-            <td>$${target5x.toFixed(6)}</td>
-            <td>$${target10x.toFixed(6)}</td>
             <td class="actions">
               <button onclick="editCrypto(${index})">Edit</button>
               <button onclick="deleteCrypto(${index})">Delete</button>
@@ -375,32 +389,35 @@
         profitLossTableBody.innerHTML += profitLossRow;
 
         // Profit at Targets Table
-        const profit2xUSD = (target2x - crypto.avgPrice) * crypto.quantity;
-        const profit2xPercentage = ((target2x - crypto.avgPrice) / crypto.avgPrice) * 100;
+        const target1Price = crypto.avgPrice * targetMultiples[0];
+        const target1ProfitUSD = (target1Price - crypto.avgPrice) * crypto.quantity;
+        const target1ProfitPercentage = ((target1Price - crypto.avgPrice) / crypto.avgPrice) * 100;
 
-        const profit5xUSD = (target5x - crypto.avgPrice) * crypto.quantity;
-        const profit5xPercentage = ((target5x - crypto.avgPrice) / crypto.avgPrice) * 100;
+        const target2Price = crypto.avgPrice * targetMultiples[1];
+        const target2ProfitUSD = (target2Price - crypto.avgPrice) * crypto.quantity;
+        const target2ProfitPercentage = ((target2Price - crypto.avgPrice) / crypto.avgPrice) * 100;
 
-        const profit10xUSD = (target10x - crypto.avgPrice) * crypto.quantity;
-        const profit10xPercentage = ((target10x - crypto.avgPrice) / crypto.avgPrice) * 100;
+        const target3Price = crypto.avgPrice * targetMultiples[2];
+        const target3ProfitUSD = (target3Price - crypto.avgPrice) * crypto.quantity;
+        const target3ProfitPercentage = ((target3Price - crypto.avgPrice) / crypto.avgPrice) * 100;
 
         const profitTargetsRow = `
           <tr>
             <td>${crypto.name.toUpperCase()}</td>
-            <td class="profit-positive">$${profit2xUSD.toFixed(2)}</td>
-            <td class="profit-positive">${profit2xPercentage.toFixed(2)}%</td>
-            <td class="profit-positive">$${profit5xUSD.toFixed(2)}</td>
-            <td class="profit-positive">${profit5xPercentage.toFixed(2)}%</td>
-            <td class="profit-positive">$${profit10xUSD.toFixed(2)}</td>
-            <td class="profit-positive">${profit10xPercentage.toFixed(2)}%</td>
+            <td class="profit-positive">$${target1ProfitUSD.toFixed(2)}</td>
+            <td class="profit-positive">${target1ProfitPercentage.toFixed(2)}%</td>
+            <td class="profit-positive">$${target2ProfitUSD.toFixed(2)}</td>
+            <td class="profit-positive">${target2ProfitPercentage.toFixed(2)}%</td>
+            <td class="profit-positive">$${target3ProfitUSD.toFixed(2)}</td>
+            <td class="profit-positive">${target3ProfitPercentage.toFixed(2)}%</td>
           </tr>
         `;
         profitTargetsTableBody.innerHTML += profitTargetsRow;
 
         // Calculate total profit at targets
-        totalProfit2x += profit2xUSD;
-        totalProfit5x += profit5xUSD;
-        totalProfit10x += profit10xUSD;
+        totalProfitTarget1 += target1ProfitUSD;
+        totalProfitTarget2 += target2ProfitUSD;
+        totalProfitTarget3 += target3ProfitUSD;
       });
 
       // Update Totals
@@ -412,9 +429,9 @@
       document.getElementById('totalProfitLossPercentage').textContent = `${totalProfitLossPercentage.toFixed(2)}%`;
 
       // Update total profit at targets
-      document.getElementById('totalProfit2x').textContent = `2x: $${totalProfit2x.toFixed(2)}`;
-      document.getElementById('totalProfit5x').textContent = `5x: $${totalProfit5x.toFixed(2)}`;
-      document.getElementById('totalProfit10x').textContent = `10x: $${totalProfit10x.toFixed(2)}`;
+      document.getElementById('totalProfitTarget1').textContent = `Target 1: $${totalProfitTarget1.toFixed(2)}`;
+      document.getElementById('totalProfitTarget2').textContent = `Target 2: $${totalProfitTarget2.toFixed(2)}`;
+      document.getElementById('totalProfitTarget3').textContent = `Target 3: $${totalProfitTarget3.toFixed(2)}`;
 
       // Color coding for total profit/loss
       document.getElementById('totalProfitLossUsd').className = totalProfitLossUsd >= 0 ? 'profit-positive' : 'profit-negative';
