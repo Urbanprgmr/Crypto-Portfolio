@@ -231,20 +231,12 @@
       updatePortfolio();
     }
 
-    function editCrypto(index) {
-      document.getElementById("cryptoName").value = portfolio[index].name;
-      document.getElementById("avgPrice").value = portfolio[index].avgPrice;
-      document.getElementById("quantity").value = portfolio[index].quantity;
-
-      editIndex = index;
-      document.getElementById("addCryptoButton").style.display = "none";
-      document.getElementById("updateCryptoButton").style.display = "inline-block";
-    }
-
     async function updatePortfolio() {
       const prices = await fetchPrices();
       const portfolioTableBody = document.querySelector("#portfolioTable tbody");
+      const targetsTableBody = document.querySelector("#targetsTable tbody");
       portfolioTableBody.innerHTML = "";
+      targetsTableBody.innerHTML = "";
 
       portfolio.forEach((crypto, index) => {
         const currentPrice = prices[cryptoIdMap[crypto.name]]?.usd || 0;
@@ -265,12 +257,22 @@
             </td>
           </tr>
         `;
+
+        targetsTableBody.innerHTML += `
+          <tr>
+            <td>${crypto.name.toUpperCase()}</td>
+            <td>$${(crypto.avgPrice * 2).toFixed(6)}</td>
+            <td class="profit-positive">$${(crypto.quantity * (crypto.avgPrice * 2) - totalCost).toFixed(2)}</td>
+            <td>$${(crypto.avgPrice * 5).toFixed(6)}</td>
+            <td class="profit-positive">$${(crypto.quantity * (crypto.avgPrice * 5) - totalCost).toFixed(2)}</td>
+            <td>$${(crypto.avgPrice * 10).toFixed(6)}</td>
+            <td class="profit-positive">$${(crypto.quantity * (crypto.avgPrice * 10) - totalCost).toFixed(2)}</td>
+          </tr>
+        `;
       });
     }
 
     document.getElementById("addCryptoButton").addEventListener("click", addCrypto);
-    document.getElementById("updateCryptoButton").addEventListener("click", addCrypto);
-
     updatePortfolio();
     setInterval(updatePortfolio, 60000);
   </script>
