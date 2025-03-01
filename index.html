@@ -137,24 +137,17 @@
     </div>
 
     <div>
-      <h2>Select Price Targets</h2>
-      <label><input type="checkbox" id="target2x" checked> 2x</label>
-      <label><input type="checkbox" id="target5x" checked> 5x</label>
-      <label><input type="checkbox" id="target10x" checked> 10x</label>
-    </div>
-
-    <div>
       <h2>Price Targets & Profits</h2>
       <table id="targetsTable">
         <thead>
           <tr>
             <th>Crypto</th>
-            <th class="target2x-column">2x Target</th>
-            <th class="target2x-column">Profit @ 2x</th>
-            <th class="target5x-column">5x Target</th>
-            <th class="target5x-column">Profit @ 5x</th>
-            <th class="target10x-column">10x Target</th>
-            <th class="target10x-column">Profit @ 10x</th>
+            <th>2x Target</th>
+            <th>Profit @ 2x</th>
+            <th>5x Target</th>
+            <th>Profit @ 5x</th>
+            <th>10x Target</th>
+            <th>Profit @ 10x</th>
           </tr>
         </thead>
         <tbody></tbody>
@@ -188,6 +181,31 @@
       return response.json();
     }
 
+    function savePortfolio() {
+      localStorage.setItem("cryptoPortfolio", JSON.stringify(portfolio));
+    }
+
+    function addCrypto() {
+      const name = document.getElementById("cryptoName").value.toLowerCase();
+      const avgPrice = parseFloat(document.getElementById("avgPrice").value);
+      const quantity = parseFloat(document.getElementById("quantity").value);
+
+      if (!cryptoIdMap[name]) {
+        alert("Crypto not supported.");
+        return;
+      }
+
+      portfolio.push({ name, avgPrice, quantity });
+      savePortfolio();
+      updatePortfolio();
+    }
+
+    function deleteCrypto(index) {
+      portfolio.splice(index, 1);
+      savePortfolio();
+      updatePortfolio();
+    }
+
     async function updatePortfolio() {
       const prices = await fetchPrices();
       let totalInvestment = 0, totalPortfolioValue = 0, totalProfitLoss = 0;
@@ -196,7 +214,7 @@
       portfolioTableBody.innerHTML = "";
       targetsTableBody.innerHTML = "";
 
-      portfolio.forEach(crypto => {
+      portfolio.forEach((crypto, index) => {
         const currentPrice = prices[cryptoIdMap[crypto.name]]?.usd || 0;
         const totalCost = crypto.quantity * crypto.avgPrice;
         const totalValue = crypto.quantity * currentPrice;
@@ -214,6 +232,9 @@
             <td>$${totalCost.toFixed(2)}</td>
             <td>$${currentPrice.toFixed(6)}</td>
             <td class="${profitLossUSD >= 0 ? 'profit-positive' : 'profit-negative'}">$${profitLossUSD.toFixed(2)}</td>
+            <td>
+              <button onclick="deleteCrypto(${index})">Delete</button>
+            </td>
           </tr>
         `;
 
@@ -235,6 +256,7 @@
       document.getElementById("totalProfitLossUsd").textContent = `$${totalProfitLoss.toFixed(2)}`;
     }
 
+    document.getElementById("addCryptoButton").addEventListener("click", addCrypto);
     updatePortfolio();
   </script>
 </body>
