@@ -55,6 +55,10 @@
   <script>
     // (Keep the existing cryptoIdMap, cryptos, portfolio, and other variables unchanged)
 
+    // Variables to store Chart instances
+    let portfolioPieChart = null;
+    let portfolioLineChart = null;
+
     // Function to export portfolio data as CSV
     function exportData() {
       const headers = ["Crypto", "Quantity", "Avg Price", "Current Price", "USD Value", "Profit/Loss USD", "Profit/Loss %"];
@@ -97,11 +101,11 @@
       const portfolioLineChartCtx = document.getElementById('portfolioLineChart').getContext('2d');
 
       // Destroy existing charts if they exist
-      if (window.portfolioPieChart) {
-        window.portfolioPieChart.destroy();
+      if (portfolioPieChart) {
+        portfolioPieChart.destroy();
       }
-      if (window.portfolioLineChart) {
-        window.portfolioLineChart.destroy();
+      if (portfolioLineChart) {
+        portfolioLineChart.destroy();
       }
 
       // Prepare data for charts
@@ -113,7 +117,7 @@
       });
 
       // Pie Chart for Portfolio Distribution
-      window.portfolioPieChart = new Chart(portfolioPieChartCtx, {
+      portfolioPieChart = new Chart(portfolioPieChartCtx, {
         type: 'pie',
         data: {
           labels: labels,
@@ -139,7 +143,7 @@
       });
 
       // Line Chart for Portfolio Performance
-      window.portfolioLineChart = new Chart(portfolioLineChartCtx, {
+      portfolioLineChart = new Chart(portfolioLineChartCtx, {
         type: 'line',
         data: {
           labels: labels,
