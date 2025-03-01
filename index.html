@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Crypto Portfolio Manager</title>
   <style>
-    /* General Styling */
     body {
       font-family: Arial, sans-serif;
       background-color: #121212;
@@ -60,28 +59,12 @@
       background: #008cba;
     }
 
-    /* Sections */
-    .portfolio-section {
-      background: #222;
-      padding: 15px;
-      border-radius: 10px;
-      margin-bottom: 20px;
-    }
-
-    .targets-section {
-      background: #333;
-      padding: 15px;
-      border-radius: 10px;
-      margin-bottom: 20px;
-    }
-
     table {
       width: 100%;
       border-collapse: collapse;
       margin-top: 15px;
       background: #222;
       border-radius: 5px;
-      overflow: hidden;
     }
 
     th, td {
@@ -128,14 +111,14 @@
   <div class="container">
     <h1>Crypto Portfolio Manager</h1>
     <div class="form-group">
-      <input type="text" id="cryptoName" placeholder="Crypto Name (e.g., gala)" required>
+      <input type="text" id="cryptoName" placeholder="Crypto Name (e.g., btc)" required>
       <input type="number" step="0.000001" id="avgPrice" placeholder="Average Price" required>
       <input type="number" step="0.000001" id="quantity" placeholder="Quantity" required>
       <button id="addCryptoButton">Add Crypto</button>
       <button id="updateCryptoButton" style="display: none;">Update Crypto</button>
     </div>
 
-    <div class="portfolio-section">
+    <div>
       <h2>Portfolio</h2>
       <table id="portfolioTable">
         <thead>
@@ -153,7 +136,7 @@
       </table>
     </div>
 
-    <div class="targets-section">
+    <div>
       <h2>Price Targets & Profits</h2>
       <table id="targetsTable">
         <thead>
@@ -186,16 +169,11 @@
     let editIndex = null;
 
     const cryptoIdMap = {
-      gala: "gala",
       btc: "bitcoin",
       eth: "ethereum",
       doge: "dogecoin",
       sol: "solana",
-      alpaca: "alpaca-finance",
-      dogs: "dogs-2",
-      cookie: "cookie",
-      render: "render-token",
-      pi: "pi-network"
+      gala: "gala"
     };
 
     async function fetchPrices() {
@@ -204,13 +182,53 @@
       return response.json();
     }
 
+    function savePortfolio() {
+      localStorage.setItem("cryptoPortfolio", JSON.stringify(portfolio));
+    }
+
+    function addOrUpdateCrypto() {
+      const name = document.getElementById("cryptoName").value.toLowerCase();
+      const avgPrice = parseFloat(document.getElementById("avgPrice").value);
+      const quantity = parseFloat(document.getElementById("quantity").value);
+
+      if (!cryptoIdMap[name]) {
+        alert("Crypto not found!");
+        return;
+      }
+
+      if (editIndex === null) {
+        portfolio.push({ name, avgPrice, quantity });
+      } else {
+        portfolio[editIndex] = { name, avgPrice, quantity };
+        editIndex = null;
+        document.getElementById("addCryptoButton").style.display = "inline-block";
+        document.getElementById("updateCryptoButton").style.display = "none";
+      }
+
+      savePortfolio();
+      updatePortfolio();
+    }
+
+    function editCrypto(index) {
+      document.getElementById("cryptoName").value = portfolio[index].name;
+      document.getElementById("avgPrice").value = portfolio[index].avgPrice;
+      document.getElementById("quantity").value = portfolio[index].quantity;
+      editIndex = index;
+      document.getElementById("addCryptoButton").style.display = "none";
+      document.getElementById("updateCryptoButton").style.display = "inline-block";
+    }
+
+    function deleteCrypto(index) {
+      portfolio.splice(index, 1);
+      savePortfolio();
+      updatePortfolio();
+    }
+
     async function updatePortfolio() {
       const prices = await fetchPrices();
       let totalInvestment = 0, totalPortfolioValue = 0, totalProfitLoss = 0;
-      const portfolioTableBody = document.querySelector("#portfolioTable tbody");
-      const targetsTableBody = document.querySelector("#targetsTable tbody");
-      portfolioTableBody.innerHTML = "";
-      targetsTableBody.innerHTML = "";
+      document.querySelector("#portfolioTable tbody").innerHTML = "";
+      document.querySelector("#targetsTable tbody").innerHTML = "";
 
       portfolio.forEach((crypto, index) => {
         const currentPrice = prices[cryptoIdMap[crypto.name]]?.usd || 0;
@@ -221,33 +239,6 @@
         totalInvestment += totalCost;
         totalPortfolioValue += totalValue;
         totalProfitLoss += profitLossUSD;
-
-        portfolioTableBody.innerHTML += `
-          <tr>
-            <td>${crypto.name.toUpperCase()}</td>
-            <td>${crypto.quantity}</td>
-            <td>$${crypto.avgPrice.toFixed(6)}</td>
-            <td>$${totalCost.toFixed(2)}</td>
-            <td>$${currentPrice.toFixed(6)}</td>
-            <td class="${profitLossUSD >= 0 ? 'profit-positive' : 'profit-negative'}">$${profitLossUSD.toFixed(2)}</td>
-            <td>
-              <button onclick="editCrypto(${index})">Edit</button>
-              <button onclick="deleteCrypto(${index})">Delete</button>
-            </td>
-          </tr>
-        `;
-
-        targetsTableBody.innerHTML += `
-          <tr>
-            <td>${crypto.name.toUpperCase()}</td>
-            <td>$${(crypto.avgPrice * 2).toFixed(6)}</td>
-            <td>$${(crypto.quantity * (crypto.avgPrice * 2) - totalCost).toFixed(2)}</td>
-            <td>$${(crypto.avgPrice * 5).toFixed(6)}</td>
-            <td>$${(crypto.quantity * (crypto.avgPrice * 5) - totalCost).toFixed(2)}</td>
-            <td>$${(crypto.avgPrice * 10).toFixed(6)}</td>
-            <td>$${(crypto.quantity * (crypto.avgPrice * 10) - totalCost).toFixed(2)}</td>
-          </tr>
-        `;
       });
 
       document.getElementById("totalInvestment").textContent = `$${totalInvestment.toFixed(2)}`;
@@ -255,6 +246,8 @@
       document.getElementById("totalProfitLossUsd").textContent = `$${totalProfitLoss.toFixed(2)}`;
     }
 
+    document.getElementById("addCryptoButton").addEventListener("click", addOrUpdateCrypto);
+    document.getElementById("updateCryptoButton").addEventListener("click", addOrUpdateCrypto);
     updatePortfolio();
   </script>
 
