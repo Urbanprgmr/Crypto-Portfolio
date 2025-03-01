@@ -169,11 +169,16 @@
     let editIndex = null;
 
     const cryptoIdMap = {
+      gala: "gala",
       btc: "bitcoin",
       eth: "ethereum",
       doge: "dogecoin",
       sol: "solana",
-      gala: "gala"
+      alpaca: "alpaca-finance",
+      dogs: "dogs-2",
+      cookie: "cookie",
+      render: "render-token",
+      pi: "pi-network"
     };
 
     async function fetchPrices() {
@@ -227,8 +232,10 @@
     async function updatePortfolio() {
       const prices = await fetchPrices();
       let totalInvestment = 0, totalPortfolioValue = 0, totalProfitLoss = 0;
-      document.querySelector("#portfolioTable tbody").innerHTML = "";
-      document.querySelector("#targetsTable tbody").innerHTML = "";
+      const portfolioTableBody = document.querySelector("#portfolioTable tbody");
+      const targetsTableBody = document.querySelector("#targetsTable tbody");
+      portfolioTableBody.innerHTML = "";
+      targetsTableBody.innerHTML = "";
 
       portfolio.forEach((crypto, index) => {
         const currentPrice = prices[cryptoIdMap[crypto.name]]?.usd || 0;
@@ -239,6 +246,21 @@
         totalInvestment += totalCost;
         totalPortfolioValue += totalValue;
         totalProfitLoss += profitLossUSD;
+
+        portfolioTableBody.innerHTML += `
+          <tr>
+            <td>${crypto.name.toUpperCase()}</td>
+            <td>${crypto.quantity}</td>
+            <td>$${crypto.avgPrice.toFixed(6)}</td>
+            <td>$${totalCost.toFixed(2)}</td>
+            <td>$${currentPrice.toFixed(6)}</td>
+            <td class="${profitLossUSD >= 0 ? 'profit-positive' : 'profit-negative'}">$${profitLossUSD.toFixed(2)}</td>
+            <td>
+              <button onclick="editCrypto(${index})">Edit</button>
+              <button onclick="deleteCrypto(${index})">Delete</button>
+            </td>
+          </tr>
+        `;
       });
 
       document.getElementById("totalInvestment").textContent = `$${totalInvestment.toFixed(2)}`;
@@ -246,10 +268,7 @@
       document.getElementById("totalProfitLossUsd").textContent = `$${totalProfitLoss.toFixed(2)}`;
     }
 
-    document.getElementById("addCryptoButton").addEventListener("click", addOrUpdateCrypto);
-    document.getElementById("updateCryptoButton").addEventListener("click", addOrUpdateCrypto);
     updatePortfolio();
   </script>
-
 </body>
 </html>
