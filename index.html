@@ -193,6 +193,19 @@
     let portfolio = [];
     let editIndex = null;
 
+    // Load portfolio from localStorage
+    function loadPortfolio() {
+      const savedPortfolio = localStorage.getItem('cryptoPortfolio');
+      if (savedPortfolio) {
+        portfolio = JSON.parse(savedPortfolio);
+      }
+    }
+
+    // Save portfolio to localStorage
+    function savePortfolio() {
+      localStorage.setItem('cryptoPortfolio', JSON.stringify(portfolio));
+    }
+
     // Fetch real-time prices
     async function fetchPrices() {
       const response = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${cryptos.join(',')}&vs_currencies=usd`);
@@ -216,6 +229,7 @@
       document.getElementById('cryptoName').value = '';
       document.getElementById('avgPrice').value = '';
       document.getElementById('quantity').value = '';
+      savePortfolio();
       updatePortfolio();
     });
 
@@ -238,12 +252,14 @@
       document.getElementById('addCryptoButton').style.display = 'inline-block';
       document.getElementById('updateCryptoButton').style.display = 'none';
       editIndex = null;
+      savePortfolio();
       updatePortfolio();
     });
 
     // Delete crypto from portfolio
     function deleteCrypto(index) {
       portfolio.splice(index, 1);
+      savePortfolio();
       updatePortfolio();
     }
 
@@ -365,6 +381,7 @@
     }
 
     // Initial load
+    loadPortfolio();
     updatePortfolio();
     setInterval(updatePortfolio, 60000); // Refresh every minute
   </script>
