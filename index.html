@@ -137,24 +137,17 @@
     </div>
 
     <div>
-      <h2>Select Price Targets</h2>
-      <label><input type="checkbox" id="target2x" checked> 2x</label>
-      <label><input type="checkbox" id="target5x" checked> 5x</label>
-      <label><input type="checkbox" id="target10x" checked> 10x</label>
-    </div>
-
-    <div>
       <h2>Price Targets & Profits</h2>
       <table id="targetsTable">
         <thead>
           <tr>
             <th>Crypto</th>
-            <th class="target2x-column">2x Target</th>
-            <th class="target2x-column">Profit @ 2x</th>
-            <th class="target5x-column">5x Target</th>
-            <th class="target5x-column">Profit @ 5x</th>
-            <th class="target10x-column">10x Target</th>
-            <th class="target10x-column">Profit @ 10x</th>
+            <th>2x Target</th>
+            <th>Profit @ 2x</th>
+            <th>5x Target</th>
+            <th>Profit @ 5x</th>
+            <th>10x Target</th>
+            <th>Profit @ 10x</th>
           </tr>
         </thead>
         <tbody></tbody>
@@ -173,7 +166,6 @@
 
   <script>
     let portfolio = JSON.parse(localStorage.getItem("cryptoPortfolio")) || [];
-    let editIndex = null;
 
     const cryptoIdMap = {
       gala: "gala",
@@ -227,18 +219,20 @@
           </tr>
         `;
 
-        targetsTableBody.innerHTML += `
-          <tr>
-            <td>${crypto.name.toUpperCase()}</td>
-            <td>$${(crypto.avgPrice * 2).toFixed(6)}</td>
-            <td>$${((crypto.avgPrice * 2 - crypto.avgPrice) * crypto.quantity).toFixed(2)}</td>
-            <td>$${(crypto.avgPrice * 5).toFixed(6)}</td>
-            <td>$${((crypto.avgPrice * 5 - crypto.avgPrice) * crypto.quantity).toFixed(2)}</td>
-            <td>$${(crypto.avgPrice * 10).toFixed(6)}</td>
-            <td>$${((crypto.avgPrice * 10 - crypto.avgPrice) * crypto.quantity).toFixed(2)}</td>
-          </tr>
-        `;
+        document.getElementById("totalInvestment").textContent = `$${totalInvestment.toFixed(2)}`;
+        document.getElementById("totalUsdValue").textContent = `$${totalPortfolioValue.toFixed(2)}`;
+        document.getElementById("totalProfitLossUsd").textContent = `$${totalProfitLoss.toFixed(2)}`;
       });
+    }
+
+    function savePortfolio() {
+      localStorage.setItem("cryptoPortfolio", JSON.stringify(portfolio));
+    }
+
+    function deleteCrypto(index) {
+      portfolio.splice(index, 1);
+      savePortfolio();
+      updatePortfolio();
     }
 
     updatePortfolio();
