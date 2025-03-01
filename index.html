@@ -136,24 +136,6 @@
       </table>
     </div>
 
-    <div>
-      <h2>Price Targets & Profits</h2>
-      <table id="targetsTable">
-        <thead>
-          <tr>
-            <th>Crypto</th>
-            <th>2x Target</th>
-            <th>Profit @ 2x</th>
-            <th>5x Target</th>
-            <th>Profit @ 5x</th>
-            <th>10x Target</th>
-            <th>Profit @ 10x</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
-    </div>
-
     <div class="totals">
       <h3>Total Investment</h3>
       <p id="totalInvestment">$0.00</p>
@@ -166,6 +148,7 @@
 
   <script>
     let portfolio = JSON.parse(localStorage.getItem("cryptoPortfolio")) || [];
+    let editIndex = null;
 
     const cryptoIdMap = {
       btc: "bitcoin",
@@ -185,19 +168,36 @@
       localStorage.setItem("cryptoPortfolio", JSON.stringify(portfolio));
     }
 
-    function addCrypto() {
+    function addOrUpdateCrypto() {
       const name = document.getElementById("cryptoName").value.toLowerCase();
       const avgPrice = parseFloat(document.getElementById("avgPrice").value);
       const quantity = parseFloat(document.getElementById("quantity").value);
 
       if (!cryptoIdMap[name]) {
-        alert("Crypto not supported.");
+        alert("Crypto not found!");
         return;
       }
 
-      portfolio.push({ name, avgPrice, quantity });
+      if (editIndex === null) {
+        portfolio.push({ name, avgPrice, quantity });
+      } else {
+        portfolio[editIndex] = { name, avgPrice, quantity };
+        editIndex = null;
+        document.getElementById("addCryptoButton").style.display = "inline-block";
+        document.getElementById("updateCryptoButton").style.display = "none";
+      }
+
       savePortfolio();
       updatePortfolio();
+    }
+
+    function editCrypto(index) {
+      document.getElementById("cryptoName").value = portfolio[index].name;
+      document.getElementById("avgPrice").value = portfolio[index].avgPrice;
+      document.getElementById("quantity").value = portfolio[index].quantity;
+      editIndex = index;
+      document.getElementById("addCryptoButton").style.display = "none";
+      document.getElementById("updateCryptoButton").style.display = "inline-block";
     }
 
     function deleteCrypto(index) {
@@ -210,9 +210,7 @@
       const prices = await fetchPrices();
       let totalInvestment = 0, totalPortfolioValue = 0, totalProfitLoss = 0;
       const portfolioTableBody = document.querySelector("#portfolioTable tbody");
-      const targetsTableBody = document.querySelector("#targetsTable tbody");
       portfolioTableBody.innerHTML = "";
-      targetsTableBody.innerHTML = "";
 
       portfolio.forEach((crypto, index) => {
         const currentPrice = prices[cryptoIdMap[crypto.name]]?.usd || 0;
@@ -233,20 +231,9 @@
             <td>$${currentPrice.toFixed(6)}</td>
             <td class="${profitLossUSD >= 0 ? 'profit-positive' : 'profit-negative'}">$${profitLossUSD.toFixed(2)}</td>
             <td>
+              <button onclick="editCrypto(${index})">Edit</button>
               <button onclick="deleteCrypto(${index})">Delete</button>
             </td>
-          </tr>
-        `;
-
-        targetsTableBody.innerHTML += `
-          <tr>
-            <td>${crypto.name.toUpperCase()}</td>
-            <td>$${(crypto.avgPrice * 2).toFixed(6)}</td>
-            <td>$${((crypto.avgPrice * 2 - crypto.avgPrice) * crypto.quantity).toFixed(2)}</td>
-            <td>$${(crypto.avgPrice * 5).toFixed(6)}</td>
-            <td>$${((crypto.avgPrice * 5 - crypto.avgPrice) * crypto.quantity).toFixed(2)}</td>
-            <td>$${(crypto.avgPrice * 10).toFixed(6)}</td>
-            <td>$${((crypto.avgPrice * 10 - crypto.avgPrice) * crypto.quantity).toFixed(2)}</td>
           </tr>
         `;
       });
@@ -256,7 +243,8 @@
       document.getElementById("totalProfitLossUsd").textContent = `$${totalProfitLoss.toFixed(2)}`;
     }
 
-    document.getElementById("addCryptoButton").addEventListener("click", addCrypto);
+    document.getElementById("addCryptoButton").addEventListener("click", addOrUpdateCrypto);
+    document.getElementById("updateCryptoButton").addEventListener("click", addOrUpdateCrypto);
     updatePortfolio();
   </script>
 </body>
