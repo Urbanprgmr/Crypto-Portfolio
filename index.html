@@ -139,12 +139,8 @@
           <th>Quantity</th>
           <th>Avg Price</th>
           <th>Current Price</th>
-          <th>2x Target</th>
-          <th>Profit @ 2x</th>
-          <th>5x Target</th>
-          <th>Profit @ 5x</th>
-          <th>10x Target</th>
-          <th>Profit @ 10x</th>
+          <th>Profit/Loss (USD)</th>
+          <th>Profit/Loss (%)</th>
           <th>Actions</th>
         </tr>
       </thead>
@@ -152,12 +148,11 @@
     </table>
 
     <div class="totals">
-      <h3>Total USD Value</h3>
+      <h3>Total Portfolio Value</h3>
       <p id="totalUsdValue">$0.00</p>
-      <h3>Total Profit at Targets</h3>
-      <p>2x Target: <span id="totalProfit2x">$0.00</span></p>
-      <p>5x Target: <span id="totalProfit5x">$0.00</span></p>
-      <p>10x Target: <span id="totalProfit10x">$0.00</span></p>
+      <h3>Total Profit/Loss</h3>
+      <p id="totalProfitLossUsd" class="profit-positive">$0.00</p>
+      <p id="totalProfitLossPercentage" class="profit-positive">0.00%</p>
     </div>
   </div>
 
@@ -189,9 +184,8 @@
       portfolioTableBody.innerHTML = "";
 
       let totalUsdValue = 0;
-      let totalProfit2x = 0;
-      let totalProfit5x = 0;
-      let totalProfit10x = 0;
+      let totalProfitLoss = 0;
+      let totalInvestment = 0;
 
       portfolio.forEach((crypto, index) => {
         const coinGeckoId = cryptoIdMap[crypto.name];
@@ -199,13 +193,12 @@
         const totalValue = crypto.quantity * currentPrice;
         totalUsdValue += totalValue;
 
-        const profit2x = (crypto.quantity * (crypto.avgPrice * 2)) - (crypto.quantity * crypto.avgPrice);
-        const profit5x = (crypto.quantity * (crypto.avgPrice * 5)) - (crypto.quantity * crypto.avgPrice);
-        const profit10x = (crypto.quantity * (crypto.avgPrice * 10)) - (crypto.quantity * crypto.avgPrice);
+        const investment = crypto.quantity * crypto.avgPrice;
+        const profitLossUSD = totalValue - investment;
+        const profitLossPercentage = ((profitLossUSD / investment) * 100).toFixed(2);
 
-        totalProfit2x += profit2x;
-        totalProfit5x += profit5x;
-        totalProfit10x += profit10x;
+        totalProfitLoss += profitLossUSD;
+        totalInvestment += investment;
 
         portfolioTableBody.innerHTML += `
           <tr>
@@ -213,12 +206,12 @@
             <td>${crypto.quantity}</td>
             <td>$${crypto.avgPrice.toFixed(6)}</td>
             <td>$${currentPrice.toFixed(6)}</td>
-            <td>$${(crypto.avgPrice * 2).toFixed(6)}</td>
-            <td class="profit-positive">$${profit2x.toFixed(2)}</td>
-            <td>$${(crypto.avgPrice * 5).toFixed(6)}</td>
-            <td class="profit-positive">$${profit5x.toFixed(2)}</td>
-            <td>$${(crypto.avgPrice * 10).toFixed(6)}</td>
-            <td class="profit-positive">$${profit10x.toFixed(2)}</td>
+            <td class="${profitLossUSD >= 0 ? 'profit-positive' : 'profit-negative'}">
+              $${profitLossUSD.toFixed(2)}
+            </td>
+            <td class="${profitLossUSD >= 0 ? 'profit-positive' : 'profit-negative'}">
+              ${profitLossPercentage}%
+            </td>
             <td class="actions">
               <button onclick="deleteCrypto(${index})">Delete</button>
             </td>
@@ -227,9 +220,11 @@
       });
 
       document.getElementById("totalUsdValue").textContent = `$${totalUsdValue.toFixed(2)}`;
-      document.getElementById("totalProfit2x").textContent = `$${totalProfit2x.toFixed(2)}`;
-      document.getElementById("totalProfit5x").textContent = `$${totalProfit5x.toFixed(2)}`;
-      document.getElementById("totalProfit10x").textContent = `$${totalProfit10x.toFixed(2)}`;
+      document.getElementById("totalProfitLossUsd").textContent = `$${totalProfitLoss.toFixed(2)}`;
+      document.getElementById("totalProfitLossPercentage").textContent = `${((totalProfitLoss / totalInvestment) * 100).toFixed(2)}%`;
+
+      document.getElementById("totalProfitLossUsd").className = totalProfitLoss >= 0 ? "profit-positive" : "profit-negative";
+      document.getElementById("totalProfitLossPercentage").className = totalProfitLoss >= 0 ? "profit-positive" : "profit-negative";
 
       localStorage.setItem("cryptoPortfolio", JSON.stringify(portfolio));
     }
