@@ -136,6 +136,31 @@
       </table>
     </div>
 
+    <div>
+      <h2>Select Price Targets</h2>
+      <label><input type="checkbox" id="target2x" checked> 2x</label>
+      <label><input type="checkbox" id="target5x" checked> 5x</label>
+      <label><input type="checkbox" id="target10x" checked> 10x</label>
+    </div>
+
+    <div>
+      <h2>Price Targets & Profits</h2>
+      <table id="targetsTable">
+        <thead>
+          <tr>
+            <th>Crypto</th>
+            <th class="target2x-column">2x Target</th>
+            <th class="target2x-column">Profit @ 2x</th>
+            <th class="target5x-column">5x Target</th>
+            <th class="target5x-column">Profit @ 5x</th>
+            <th class="target10x-column">10x Target</th>
+            <th class="target10x-column">Profit @ 10x</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
     <div class="totals">
       <h3>Total Investment</h3>
       <p id="totalInvestment">$0.00</p>
@@ -169,53 +194,13 @@
       return response.json();
     }
 
-    function savePortfolio() {
-      localStorage.setItem("cryptoPortfolio", JSON.stringify(portfolio));
-    }
-
-    function addOrUpdateCrypto() {
-      const name = document.getElementById("cryptoName").value.toLowerCase();
-      const avgPrice = parseFloat(document.getElementById("avgPrice").value);
-      const quantity = parseFloat(document.getElementById("quantity").value);
-
-      if (!cryptoIdMap[name]) {
-        alert("Crypto not found!");
-        return;
-      }
-
-      if (editIndex === null) {
-        portfolio.push({ name, avgPrice, quantity });
-      } else {
-        portfolio[editIndex] = { name, avgPrice, quantity };
-        editIndex = null;
-        document.getElementById("addCryptoButton").style.display = "inline-block";
-        document.getElementById("updateCryptoButton").style.display = "none";
-      }
-
-      savePortfolio();
-      updatePortfolio();
-    }
-
-    function editCrypto(index) {
-      document.getElementById("cryptoName").value = portfolio[index].name;
-      document.getElementById("avgPrice").value = portfolio[index].avgPrice;
-      document.getElementById("quantity").value = portfolio[index].quantity;
-      editIndex = index;
-      document.getElementById("addCryptoButton").style.display = "none";
-      document.getElementById("updateCryptoButton").style.display = "inline-block";
-    }
-
-    function deleteCrypto(index) {
-      portfolio.splice(index, 1);
-      savePortfolio();
-      updatePortfolio();
-    }
-
     async function updatePortfolio() {
       const prices = await fetchPrices();
       let totalInvestment = 0, totalPortfolioValue = 0, totalProfitLoss = 0;
       const portfolioTableBody = document.querySelector("#portfolioTable tbody");
+      const targetsTableBody = document.querySelector("#targetsTable tbody");
       portfolioTableBody.innerHTML = "";
+      targetsTableBody.innerHTML = "";
 
       portfolio.forEach((crypto, index) => {
         const currentPrice = prices[cryptoIdMap[crypto.name]]?.usd || 0;
@@ -241,15 +226,21 @@
             </td>
           </tr>
         `;
-      });
 
-      document.getElementById("totalInvestment").textContent = `$${totalInvestment.toFixed(2)}`;
-      document.getElementById("totalUsdValue").textContent = `$${totalPortfolioValue.toFixed(2)}`;
-      document.getElementById("totalProfitLossUsd").textContent = `$${totalProfitLoss.toFixed(2)}`;
+        targetsTableBody.innerHTML += `
+          <tr>
+            <td>${crypto.name.toUpperCase()}</td>
+            <td>$${(crypto.avgPrice * 2).toFixed(6)}</td>
+            <td>$${((crypto.avgPrice * 2 - crypto.avgPrice) * crypto.quantity).toFixed(2)}</td>
+            <td>$${(crypto.avgPrice * 5).toFixed(6)}</td>
+            <td>$${((crypto.avgPrice * 5 - crypto.avgPrice) * crypto.quantity).toFixed(2)}</td>
+            <td>$${(crypto.avgPrice * 10).toFixed(6)}</td>
+            <td>$${((crypto.avgPrice * 10 - crypto.avgPrice) * crypto.quantity).toFixed(2)}</td>
+          </tr>
+        `;
+      });
     }
 
-    document.getElementById("addCryptoButton").addEventListener("click", addOrUpdateCrypto);
-    document.getElementById("updateCryptoButton").addEventListener("click", addOrUpdateCrypto);
     updatePortfolio();
   </script>
 </body>
