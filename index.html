@@ -182,6 +182,11 @@
       <h3>Total Profit/Loss</h3>
       <p id="totalProfitLossUsd">$0.00</p>
       <p id="totalProfitLossPercentage">0.00%</p>
+
+      <h3>Total Profit at Targets</h3>
+      <p id="totalProfit2x">2x: $0.00</p>
+      <p id="totalProfit5x">5x: $0.00</p>
+      <p id="totalProfit10x">10x: $0.00</p>
     </div>
   </div>
 
@@ -290,6 +295,9 @@
       let totalUsdValue = 0;
       let totalInvestment = 0;
       let totalCurrentValue = 0;
+      let totalProfit2x = 0;
+      let totalProfit5x = 0;
+      let totalProfit10x = 0;
 
       portfolio.forEach((crypto, index) => {
         const currentPrice = prices[crypto.name]?.usd || 0;
@@ -365,6 +373,11 @@
           </tr>
         `;
         profitTargetsTableBody.innerHTML += profitTargetsRow;
+
+        // Calculate total profit at targets
+        totalProfit2x += profit2xUSD;
+        totalProfit5x += profit5xUSD;
+        totalProfit10x += profit10xUSD;
       });
 
       // Update Totals
@@ -374,6 +387,11 @@
       document.getElementById('totalUsdValue').textContent = `$${totalUsdValue.toFixed(2)}`;
       document.getElementById('totalProfitLossUsd').textContent = `$${totalProfitLossUsd.toFixed(2)}`;
       document.getElementById('totalProfitLossPercentage').textContent = `${totalProfitLossPercentage.toFixed(2)}%`;
+
+      // Update total profit at targets
+      document.getElementById('totalProfit2x').textContent = `2x: $${totalProfit2x.toFixed(2)}`;
+      document.getElementById('totalProfit5x').textContent = `5x: $${totalProfit5x.toFixed(2)}`;
+      document.getElementById('totalProfit10x').textContent = `10x: $${totalProfit10x.toFixed(2)}`;
 
       // Color coding for total profit/loss
       document.getElementById('totalProfitLossUsd').className = totalProfitLossUsd >= 0 ? 'profit-positive' : 'profit-negative';
