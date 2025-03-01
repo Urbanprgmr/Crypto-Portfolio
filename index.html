@@ -166,24 +166,53 @@
 
   <script>
     let portfolio = JSON.parse(localStorage.getItem("cryptoPortfolio")) || [];
+    let editIndex = null;
 
     const cryptoIdMap = {
-      gala: "gala",
       btc: "bitcoin",
       eth: "ethereum",
       doge: "dogecoin",
       sol: "solana",
-      alpaca: "alpaca-finance",
-      dogs: "dogs-2",
-      cookie: "cookie",
-      render: "render-token",
-      pi: "pi-network"
+      gala: "gala"
     };
 
     async function fetchPrices() {
       const ids = Object.values(cryptoIdMap).join(",");
       const response = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd`);
       return response.json();
+    }
+
+    function savePortfolio() {
+      localStorage.setItem("cryptoPortfolio", JSON.stringify(portfolio));
+    }
+
+    function addOrUpdateCrypto() {
+      const name = document.getElementById("cryptoName").value.toLowerCase();
+      const avgPrice = parseFloat(document.getElementById("avgPrice").value);
+      const quantity = parseFloat(document.getElementById("quantity").value);
+
+      if (!cryptoIdMap[name]) {
+        alert("Crypto not found!");
+        return;
+      }
+
+      if (editIndex === null) {
+        portfolio.push({ name, avgPrice, quantity });
+      } else {
+        portfolio[editIndex] = { name, avgPrice, quantity };
+        editIndex = null;
+        document.getElementById("addCryptoButton").style.display = "inline-block";
+        document.getElementById("updateCryptoButton").style.display = "none";
+      }
+
+      savePortfolio();
+      updatePortfolio();
+    }
+
+    function deleteCrypto(index) {
+      portfolio.splice(index, 1);
+      savePortfolio();
+      updatePortfolio();
     }
 
     async function updatePortfolio() {
@@ -225,16 +254,7 @@
       });
     }
 
-    function savePortfolio() {
-      localStorage.setItem("cryptoPortfolio", JSON.stringify(portfolio));
-    }
-
-    function deleteCrypto(index) {
-      portfolio.splice(index, 1);
-      savePortfolio();
-      updatePortfolio();
-    }
-
+    document.getElementById("addCryptoButton").addEventListener("click", addOrUpdateCrypto);
     updatePortfolio();
   </script>
 </body>
