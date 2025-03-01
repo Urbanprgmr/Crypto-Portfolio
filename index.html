@@ -65,6 +65,12 @@
     tr:hover {
       background: rgba(255, 255, 255, 0.05);
     }
+    .profit-positive {
+      color: #4caf50;
+    }
+    .profit-negative {
+      color: #f44336;
+    }
     .chart-container {
       margin-top: 30px;
       background: rgba(255, 255, 255, 0.1);
@@ -95,11 +101,12 @@
       <input type="number" step="0.000001" id="avgPrice" placeholder="Average Price" required>
       <input type="number" step="0.000001" id="quantity" placeholder="Quantity" required>
       <button id="addCryptoButton">Add Crypto</button>
+      <button id="updateCryptoButton" style="display:none;">Update Crypto</button>
     </div>
 
-    <div class="form-group">
-      <button onclick="exportData()">Export as CSV</button>
-    </div>
+    <h2>Total Portfolio Value</h2>
+    <p><strong>Current Value:</strong> $<span id="totalPortfolioValue">0.00</span></p>
+    <p><strong>Profit/Loss:</strong> $<span id="totalProfitLoss">0.00</span> (<span id="totalProfitLossPercent">0.00%</span>)</p>
 
     <h2>Portfolio</h2>
     <table>
@@ -109,6 +116,8 @@
           <th>Quantity</th>
           <th>Avg Price</th>
           <th>Current Price</th>
+          <th>USD Value</th>
+          <th>Profit/Loss</th>
           <th>Actions</th>
         </tr>
       </thead>
@@ -120,32 +129,27 @@
       <canvas id="portfolioPieChart"></canvas>
     </div>
 
-    <div class="chart-container">
-      <h2>Portfolio Performance</h2>
-      <canvas id="portfolioLineChart"></canvas>
-    </div>
   </div>
 
   <script>
     const cryptoIdMap = {
-      gala: 'gala',
-      cookie: 'cookie',
-      dogs: 'dogs-2',
-      alpaca: 'alpaca-finance',
-      render: 'render-token',
-      ctxc: 'cortex',
-      ton: 'the-open-network',
-      apt: 'aptos',
-      manta: 'manta-network',
-      dot: 'polkadot',
+      gala: "gala",
+      btc: "bitcoin",
+      eth: "ethereum",
+      doge: "dogecoin",
+      sol: "solana",
+      alpaca: "alpaca-finance",
+      dogs: "dogs-2",
+      cookie: "cookie",
+      render: "render-token",
+      pi: "pi-network"
       xrp: 'ripple'
     };
 
     const cryptos = Object.keys(cryptoIdMap);
     let portfolio = JSON.parse(localStorage.getItem('cryptoPortfolio')) || [];
     let prices = {};
-    let portfolioPieChart = null;
-    let portfolioLineChart = null;
+    let editIndex = null;
 
     function populateCryptoDropdown() {
       const cryptoDropdown = document.getElementById('cryptoName');
@@ -161,80 +165,55 @@
       const ids = cryptos.map(crypto => cryptoIdMap[crypto]).join(',');
       const response = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd`);
       prices = await response.json();
-      return prices;
-    }
-
-    document.getElementById('addCryptoButton').addEventListener('click', async () => {
-      const cryptoName = document.getElementById('cryptoName').value.toLowerCase();
-      const avgPrice = parseFloat(document.getElementById('avgPrice').value);
-      const quantity = parseFloat(document.getElementById('quantity').value);
-
-      if (!cryptoName || isNaN(avgPrice) || isNaN(quantity)) {
-        alert("Please fill all fields correctly.");
-        return;
-      }
-
-      portfolio.push({ name: cryptoName, avgPrice, quantity });
-      localStorage.setItem('cryptoPortfolio', JSON.stringify(portfolio));
-      updatePortfolio();
-    });
-
-    function exportData() {
-      const headers = ["Crypto", "Quantity", "Avg Price", "Current Price", "USD Value"];
-      const rows = portfolio.map(crypto => {
-        const currentPrice = prices[cryptoIdMap[crypto.name]]?.usd || 0;
-        const usdValue = crypto.quantity * currentPrice;
-        return [crypto.name.toUpperCase(), crypto.quantity, crypto.avgPrice, currentPrice, usdValue];
-      });
-
-      const csvContent = [headers.join(","), ...rows.map(row => row.join(","))].join("\n");
-      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = "crypto_portfolio.csv";
-      link.click();
     }
 
     async function updatePortfolio() {
       await fetchPrices();
-      const tableBody = document.getElementById('portfolioTable');
-      tableBody.innerHTML = '';
+      document.getElementById('portfolioTable').innerHTML = "";
+      let totalValue = 0;
+      let totalInvestment = 0;
+      let totalProfit = 0;
 
       portfolio.forEach((crypto, index) => {
         const currentPrice = prices[cryptoIdMap[crypto.name]]?.usd || 0;
-        const row = `
+        const usdValue = crypto.quantity * currentPrice;
+        const investment = crypto.quantity * crypto.avgPrice;
+        const profitLossUSD = usdValue - investment;
+        const profitLossPercentage = ((usdValue - investment) / investment) * 100;
+        totalValue += usdValue;
+        totalInvestment += investment;
+        totalProfit += profitLossUSD;
+
+        document.getElementById('portfolioTable').innerHTML += `
           <tr>
             <td>${crypto.name.toUpperCase()}</td>
             <td>${crypto.quantity}</td>
             <td>$${crypto.avgPrice.toFixed(6)}</td>
-            <td>$${currentPrice}</td>
-            <td>
-              <button onclick="deleteCrypto(${index})">Delete</button>
+            <td>$${currentPrice.toFixed(2)}</td>
+            <td>$${usdValue.toFixed(2)}</td>
+            <td class="${profitLossUSD >= 0 ? 'profit-positive' : 'profit-negative'}">
+              $${profitLossUSD.toFixed(2)} (${profitLossPercentage.toFixed(2)}%)
             </td>
+            <td><button onclick="editCrypto(${index})">Edit</button></td>
           </tr>
         `;
-        tableBody.innerHTML += row;
       });
 
-      updateCharts();
+      document.getElementById('totalPortfolioValue').textContent = totalValue.toFixed(2);
+      document.getElementById('totalProfitLoss').textContent = totalProfit.toFixed(2);
+      document.getElementById('totalProfitLossPercent').textContent = ((totalProfit / totalInvestment) * 100).toFixed(2) + "%";
     }
 
-    function updateCharts() {
-      if (portfolioPieChart) portfolioPieChart.destroy();
-      portfolioPieChart = new Chart(document.getElementById('portfolioPieChart').getContext('2d'), {
-        type: 'pie',
-        data: {
-          labels: portfolio.map(crypto => crypto.name.toUpperCase()),
-          datasets: [{ data: portfolio.map(crypto => crypto.quantity) }]
-        }
-      });
-    }
+    function editCrypto(index) {
+      const crypto = portfolio[index];
+      document.getElementById('cryptoName').value = crypto.name;
+      document.getElementById('avgPrice').value = crypto.avgPrice;
+      document.getElementById('quantity').value = crypto.quantity;
+      
+      document.getElementById('addCryptoButton').style.display = 'none';
+      document.getElementById('updateCryptoButton').style.display = 'inline-block';
 
-    function deleteCrypto(index) {
-      portfolio.splice(index, 1);
-      localStorage.setItem('cryptoPortfolio', JSON.stringify(portfolio));
-      updatePortfolio();
+      editIndex = index;
     }
 
     populateCryptoDropdown();
