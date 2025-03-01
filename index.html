@@ -69,6 +69,51 @@
     </tbody>
   </table>
 
+  <h2>USD Value of Each Token</h2>
+  <table id="usdValueTable">
+    <thead>
+      <tr>
+        <th>Crypto</th>
+        <th>USD Value</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- Rows will be added here dynamically -->
+    </tbody>
+  </table>
+
+  <h2>Profit/Loss</h2>
+  <table id="profitLossTable">
+    <thead>
+      <tr>
+        <th>Crypto</th>
+        <th>Profit/Loss USD</th>
+        <th>Profit/Loss %</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- Rows will be added here dynamically -->
+    </tbody>
+  </table>
+
+  <h2>Profit at Targets</h2>
+  <table id="profitTargetsTable">
+    <thead>
+      <tr>
+        <th>Crypto</th>
+        <th>2x Profit USD</th>
+        <th>2x Profit %</th>
+        <th>5x Profit USD</th>
+        <th>5x Profit %</th>
+        <th>10x Profit USD</th>
+        <th>10x Profit %</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- Rows will be added here dynamically -->
+    </tbody>
+  </table>
+
   <script>
     const cryptos = [
       'gala', 'cookie', 'dogs', 'alpaca', 'render', 'ctxc', 'ton', 'apt', 'manta', 'dot', 'xpr', 'neiro', 'trump', 'troy', 'sxp', 'beamx', 'babydoge'
@@ -103,16 +148,25 @@
     // Update portfolio table
     async function updatePortfolio() {
       const prices = await fetchPrices();
-      const tableBody = document.querySelector('#portfolioTable tbody');
-      tableBody.innerHTML = '';
+      const portfolioTableBody = document.querySelector('#portfolioTable tbody');
+      const usdValueTableBody = document.querySelector('#usdValueTable tbody');
+      const profitLossTableBody = document.querySelector('#profitLossTable tbody');
+      const profitTargetsTableBody = document.querySelector('#profitTargetsTable tbody');
+
+      portfolioTableBody.innerHTML = '';
+      usdValueTableBody.innerHTML = '';
+      profitLossTableBody.innerHTML = '';
+      profitTargetsTableBody.innerHTML = '';
 
       portfolio.forEach((crypto) => {
         const currentPrice = prices[crypto.name]?.usd || 'Loading...';
+
+        // Portfolio Table
         const target2x = crypto.avgPrice * 2;
         const target5x = crypto.avgPrice * 5;
         const target10x = crypto.avgPrice * 10;
 
-        const row = `
+        const portfolioRow = `
           <tr>
             <td>${crypto.name.toUpperCase()}</td>
             <td>${crypto.quantity}</td>
@@ -123,7 +177,53 @@
             <td>$${target10x.toFixed(6)}</td>
           </tr>
         `;
-        tableBody.innerHTML += row;
+        portfolioTableBody.innerHTML += portfolioRow;
+
+        // USD Value Table
+        const usdValue = crypto.avgPrice * crypto.quantity;
+        const usdValueRow = `
+          <tr>
+            <td>${crypto.name.toUpperCase()}</td>
+            <td>$${usdValue.toFixed(2)}</td>
+          </tr>
+        `;
+        usdValueTableBody.innerHTML += usdValueRow;
+
+        // Profit/Loss Table
+        const profitLossUSD = (currentPrice - crypto.avgPrice) * crypto.quantity;
+        const profitLossPercentage = ((currentPrice - crypto.avgPrice) / crypto.avgPrice) * 100;
+
+        const profitLossRow = `
+          <tr>
+            <td>${crypto.name.toUpperCase()}</td>
+            <td>$${profitLossUSD.toFixed(2)}</td>
+            <td>${profitLossPercentage.toFixed(2)}%</td>
+          </tr>
+        `;
+        profitLossTableBody.innerHTML += profitLossRow;
+
+        // Profit at Targets Table
+        const profit2xUSD = (target2x - crypto.avgPrice) * crypto.quantity;
+        const profit2xPercentage = ((target2x - crypto.avgPrice) / crypto.avgPrice) * 100;
+
+        const profit5xUSD = (target5x - crypto.avgPrice) * crypto.quantity;
+        const profit5xPercentage = ((target5x - crypto.avgPrice) / crypto.avgPrice) * 100;
+
+        const profit10xUSD = (target10x - crypto.avgPrice) * crypto.quantity;
+        const profit10xPercentage = ((target10x - crypto.avgPrice) / crypto.avgPrice) * 100;
+
+        const profitTargetsRow = `
+          <tr>
+            <td>${crypto.name.toUpperCase()}</td>
+            <td>$${profit2xUSD.toFixed(2)}</td>
+            <td>${profit2xPercentage.toFixed(2)}%</td>
+            <td>$${profit5xUSD.toFixed(2)}</td>
+            <td>${profit5xPercentage.toFixed(2)}%</td>
+            <td>$${profit10xUSD.toFixed(2)}</td>
+            <td>${profit10xPercentage.toFixed(2)}%</td>
+          </tr>
+        `;
+        profitTargetsTableBody.innerHTML += profitTargetsRow;
       });
     }
 
